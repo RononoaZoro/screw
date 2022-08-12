@@ -19,13 +19,8 @@ package cn.smallbun.screw.core.metadata;
 
 import java.io.Serializable;
 
-/**
- * 表接口
- *
- * @author SanLi
- * Created by qinggang.zuo@gmail.com / 2689170096@qq.com on 2020/3/28 15:05
- */
-public interface Table extends Serializable {
+public interface IndexInfo extends Serializable {
+
     /**
      * 表名
      *
@@ -34,27 +29,21 @@ public interface Table extends Serializable {
     String getTableName();
 
     /**
-     * 获取说明
+     * 列名
      *
      * @return {@link String}
      */
-    String getRemarks();
+    String getColumnName();
 
     /**
      * 索引名称
-     *
-     * @return {@link String}
+     * @return
      */
-    default String getIndexNames() {
-        return "";
-    }
+    String getIndexName();
 
     /**
-     * 索引列字段
-     *
-     * @return {@link String}
+     * 如果索引不能重复，则为0;如果可以，则为1；
+     * @return
      */
-    default String getColumnNames() {
-        return "";
-    }
+    String getNonUnique();
 }

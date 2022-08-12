@@ -15,46 +15,35 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package cn.smallbun.screw.core.metadata;
+package cn.smallbun.screw.core.query.mysql.model;
 
-import java.io.Serializable;
+import cn.smallbun.screw.core.mapping.MappingField;
+import cn.smallbun.screw.core.metadata.IndexInfo;
+import lombok.Data;
 
-/**
- * 表接口
- *
- * @author SanLi
- * Created by qinggang.zuo@gmail.com / 2689170096@qq.com on 2020/3/28 15:05
- */
-public interface Table extends Serializable {
+@Data
+public class MysqlIndexInfoModel implements IndexInfo {
+
     /**
      * 表名
-     *
-     * @return {@link String}
      */
-    String getTableName();
-
+    @MappingField(value = "TABLE_NAME")
+    private String tableName;
     /**
-     * 获取说明
-     *
-     * @return {@link String}
+     * 列名
      */
-    String getRemarks();
+    @MappingField(value = "COLUMN_NAME")
+    private String columnName;
 
     /**
      * 索引名称
-     *
-     * @return {@link String}
      */
-    default String getIndexNames() {
-        return "";
-    }
+    @MappingField(value = "INDEX_NAME")
+    private String indexName;
 
     /**
-     * 索引列字段
-     *
-     * @return {@link String}
+     * 是否唯一索引
      */
-    default String getColumnNames() {
-        return "";
-    }
+    @MappingField(value = "NON_UNIQUE")
+    private String nonUnique;
 }

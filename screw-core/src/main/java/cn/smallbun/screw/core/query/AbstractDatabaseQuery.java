@@ -19,6 +19,7 @@ package cn.smallbun.screw.core.query;
 
 import cn.smallbun.screw.core.exception.QueryException;
 import cn.smallbun.screw.core.metadata.Column;
+import cn.smallbun.screw.core.metadata.IndexInfo;
 import cn.smallbun.screw.core.metadata.PrimaryKey;
 import cn.smallbun.screw.core.util.Assert;
 import cn.smallbun.screw.core.util.ExceptionUtils;
@@ -29,6 +30,7 @@ import lombok.Getter;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -201,5 +203,16 @@ public abstract class AbstractDatabaseQuery implements DatabaseQuery {
     @Override
     public List<? extends PrimaryKey> getPrimaryKeys() throws QueryException {
         throw ExceptionUtils.mpe(NOT_SUPPORTED);
+    }
+
+    /**
+     * 获取索引
+     *
+     * @return {@link List}
+     * @throws QueryException QueryException
+     */
+    @Override
+    public List<? extends IndexInfo> getIndexInfos() throws QueryException {
+        return new ArrayList<>();
     }
 }

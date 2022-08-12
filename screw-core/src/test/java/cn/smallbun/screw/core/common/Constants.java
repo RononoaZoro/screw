@@ -26,5 +26,6 @@ public class Constants {
     /**
      * 文件输出路径
      */
-    public static final String fileOutputDir = System.getProperty("user.dir");
+    //    public static final String fileOutputDir = System.getProperty("user.dir");
+    public static final String fileOutputDir = "D://";
 }

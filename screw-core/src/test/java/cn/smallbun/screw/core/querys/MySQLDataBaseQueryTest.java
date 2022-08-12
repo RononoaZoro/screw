@@ -94,7 +94,7 @@ public class MySQLDataBaseQueryTest implements Properties {
      */
     @Test
     void column() throws QueryException {
-        List<? extends Column> columns = query.getTableColumns("sys_org");
+        List<? extends Column> columns = query.getTableColumns("chicken_game_config");
         logger.info(JSON.toJSONString(columns, true));
     }
 

@@ -186,6 +186,7 @@ public class Mapping {
             Field field = filed.getField();
             Method method = filed.getMethod();
             MappingField jsonField = field.getAnnotation(MappingField.class);
+
             if (!Objects.isNull(jsonField)) {
                 method.invoke(rsp, map.get(jsonField.value()));
             }

@@ -86,6 +86,10 @@ public class ColumnModel implements Serializable {
      */
     private String            primaryKey;
     /**
+     * 索引
+     */
+    private String            indexType;
+    /**
      * 默认值
      */
     private String            columnDef;

@@ -81,4 +81,14 @@ public class MySqlTableModel implements Table {
      */
     @MappingField(value = "TYPE_NAME")
     private String            typeName;
+
+    /**
+     * 索引名称
+     */
+    private String            indexNames;
+
+    /**
+     * 索引列字段
+     */
+    private String            columnNames;
 }

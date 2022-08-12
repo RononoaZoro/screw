@@ -21,12 +21,10 @@ import cn.smallbun.screw.core.exception.QueryException;
 import cn.smallbun.screw.core.mapping.Mapping;
 import cn.smallbun.screw.core.metadata.Column;
 import cn.smallbun.screw.core.metadata.Database;
+import cn.smallbun.screw.core.metadata.IndexInfo;
 import cn.smallbun.screw.core.metadata.PrimaryKey;
 import cn.smallbun.screw.core.query.AbstractDatabaseQuery;
-import cn.smallbun.screw.core.query.mysql.model.MySqlColumnModel;
-import cn.smallbun.screw.core.query.mysql.model.MySqlDatabaseModel;
-import cn.smallbun.screw.core.query.mysql.model.MySqlPrimaryKeyModel;
-import cn.smallbun.screw.core.query.mysql.model.MySqlTableModel;
+import cn.smallbun.screw.core.query.mysql.model.*;
 import cn.smallbun.screw.core.util.Assert;
 import cn.smallbun.screw.core.util.CollectionUtils;
 import cn.smallbun.screw.core.util.ExceptionUtils;
@@ -37,6 +35,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static cn.smallbun.screw.core.constant.DefaultConstants.PERCENT_SIGN;
@@ -88,6 +87,56 @@ public class MySqlDataBaseQuery extends AbstractDatabaseQuery {
                 new String[] { "TABLE" });
             //映射
             return Mapping.convertList(resultSet, MySqlTableModel.class);
+        } catch (SQLException e) {
+            throw ExceptionUtils.mpe(e);
+        } finally {
+            JdbcUtils.close(resultSet);
+        }
+
+    }
+
+    @Override
+    public List<MySqlTableModel> getTables(List<? extends IndexInfo> indexInfos) throws QueryException {
+        ResultSet resultSet = null;
+        try {
+            //查询
+            resultSet = getMetaData().getTables(getCatalog(), getSchema(), PERCENT_SIGN,
+                new String[] { "TABLE" });
+            //映射
+            List<MySqlTableModel> mySqlTableModels = Mapping.convertList(resultSet,
+                MySqlTableModel.class);
+            for (MySqlTableModel model : mySqlTableModels) {
+                StringBuilder indexNames = new StringBuilder();
+                StringBuilder columnNames = new StringBuilder();
+                int brflag = 0;
+                for (IndexInfo indexInfo : indexInfos) {
+                    if (!Objects.equals(model.getTableName(), indexInfo.getTableName())) {
+                        continue;
+                    }
+                    brflag++;
+                    indexNames.append(indexInfo.getIndexName()).append("||");
+                    columnNames.append(indexInfo.getColumnName()).append("||");
+                }
+                //                if (indexNames.toString().endsWith("<br/>")) {
+                //                    indexNames = new StringBuilder(
+                //                        indexNames.substring(0, indexNames.length() - 5));
+                //                }
+                //                if (columnNames.toString().endsWith("<br/>")) {
+                //                    columnNames = new StringBuilder(
+                //                        columnNames.substring(0, columnNames.length() - 5));
+                //                }
+                if (indexNames.toString().endsWith("||")) {
+                    indexNames = new StringBuilder(
+                        indexNames.substring(0, indexNames.length() - 2));
+                }
+                if (columnNames.toString().endsWith("||")) {
+                    columnNames = new StringBuilder(
+                        columnNames.substring(0, columnNames.length() - 2));
+                }
+                model.setIndexNames(indexNames.toString());
+                model.setColumnNames(columnNames.toString());
+            }
+            return mySqlTableModels;
         } catch (SQLException e) {
             throw ExceptionUtils.mpe(e);
         } finally {
@@ -213,6 +262,25 @@ public class MySqlDataBaseQuery extends AbstractDatabaseQuery {
             resultSet = prepareStatement(String.format(sql, getDataBase().getDatabase()))
                 .executeQuery();
             return Mapping.convertList(resultSet, MySqlPrimaryKeyModel.class);
+        } catch (SQLException e) {
+            throw new QueryException(e);
+        } finally {
+            JdbcUtils.close(resultSet);
+        }
+    }
+
+    @Override
+    public List<? extends IndexInfo> getIndexInfos() throws QueryException {
+        ResultSet resultSet = null;
+        try {
+            // 由于单条循环查询存在性能问题，所以这里通过自定义SQL查询数据库主键信息
+            String sql = "SELECT \n" + "TABLE_NAME, INDEX_NAME, COLUMN_NAME,NON_UNIQUE\n" + "FROM\n"
+                         + "information_schema.statistics\n" + "where\n" + "table_schema='%s'\n"
+                         + "GROUP BY TABLE_NAME, INDEX_NAME;";
+            // 拼接参数
+            resultSet = prepareStatement(String.format(sql, getDataBase().getDatabase()))
+                .executeQuery();
+            return Mapping.convertList(resultSet, MysqlIndexInfoModel.class);
         } catch (SQLException e) {
             throw new QueryException(e);
         } finally {

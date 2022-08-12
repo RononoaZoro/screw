@@ -22,16 +22,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import cn.smallbun.screw.core.Configuration;
-import cn.smallbun.screw.core.metadata.Column;
-import cn.smallbun.screw.core.metadata.Database;
-import cn.smallbun.screw.core.metadata.PrimaryKey;
-import cn.smallbun.screw.core.metadata.Table;
+import cn.smallbun.screw.core.engine.EngineConfig;
+import cn.smallbun.screw.core.engine.EngineFileType;
+import cn.smallbun.screw.core.engine.EngineTemplateType;
+import cn.smallbun.screw.core.execute.DocumentationExecute;
+import cn.smallbun.screw.core.metadata.*;
 import cn.smallbun.screw.core.metadata.model.ColumnModel;
 import cn.smallbun.screw.core.metadata.model.DataModel;
 import cn.smallbun.screw.core.metadata.model.TableModel;
 import cn.smallbun.screw.core.query.DatabaseQuery;
 import cn.smallbun.screw.core.query.DatabaseQueryFactory;
 import cn.smallbun.screw.core.util.StringUtils;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import javax.sql.DataSource;
 
 import static cn.smallbun.screw.core.constant.DefaultConstants.N;
 import static cn.smallbun.screw.core.constant.DefaultConstants.Y;
@@ -97,7 +102,8 @@ public class DataModelProcess extends AbstractProcess {
         model.setDatabase(database.getDatabase());
         start = System.currentTimeMillis();
         //获取全部表
-        List<? extends Table> tables = query.getTables();
+        List<? extends IndexInfo> indexInfos = query.getIndexInfos();
+        List<? extends Table> tables = query.getTables(indexInfos);
         logger.debug("query the table time consuming:{}ms", (System.currentTimeMillis() - start));
         //获取全部列
         start = System.currentTimeMillis();
@@ -131,6 +137,10 @@ public class DataModelProcess extends AbstractProcess {
             tableModel.setTableName(table.getTableName());
             //说明
             tableModel.setRemarks(table.getRemarks());
+            //索引名称
+            tableModel.setIndexNames(table.getIndexNames());
+            //索引列
+            tableModel.setIndexColumnNames(table.getColumnNames());
             //添加表
             tableModels.add(tableModel);
             //处理列
@@ -189,6 +199,78 @@ public class DataModelProcess extends AbstractProcess {
         columnModel.setRemarks(column.getRemarks());
         //放入集合
         columnModels.add(columnModel);
+    }
+
+    public static void main(String[] args) {
+        documentGeneration();
+    }
+
+    /**
+     * 文档生成
+     */
+    static void documentGeneration() {
+        //数据源
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setDriverClassName("com.mysql.cj.jdbc.Driver");
+        hikariConfig.setJdbcUrl("jdbc:mysql://xxx:3306/xxx");
+        hikariConfig.setUsername("xxx");
+        hikariConfig.setPassword("XJkMOjv2@");
+        //设置可以获取tables remarks信息
+        hikariConfig.addDataSourceProperty("useInformationSchema", "true");
+        hikariConfig.setMinimumIdle(2);
+        hikariConfig.setMaximumPoolSize(5);
+        DataSource dataSource = new HikariDataSource(hikariConfig);
+        //生成配置
+        EngineConfig engineConfig = EngineConfig.builder()
+            //生成文件路径
+            .fileOutputDir("D://")
+            //打开目录
+            .openOutputDir(true)
+            //文件类型
+            .fileType(EngineFileType.HTML)
+            //生成模板实现
+            .produceType(EngineTemplateType.freemarker)
+            //自定义文件名称
+            .fileName("自定义文件名称").build();
+
+        //忽略表
+        ArrayList<String> ignoreTableName = new ArrayList<>();
+        ignoreTableName.add("test_user");
+        ignoreTableName.add("test_group");
+        //忽略表前缀
+        ArrayList<String> ignorePrefix = new ArrayList<>();
+        ignorePrefix.add("test_");
+        //忽略表后缀
+        ArrayList<String> ignoreSuffix = new ArrayList<>();
+        ignoreSuffix.add("_test");
+        ProcessConfig processConfig = ProcessConfig.builder()
+            //指定生成逻辑、当存在指定表、指定表前缀、指定表后缀时，将生成指定表，其余表不生成、并跳过忽略表配置
+            //根据名称指定表生成
+            .designatedTableName(new ArrayList<>())
+            //根据表前缀生成
+            .designatedTablePrefix(new ArrayList<>())
+            //根据表后缀生成
+            .designatedTableSuffix(new ArrayList<>())
+            //忽略表名
+            .ignoreTableName(ignoreTableName)
+            //忽略表前缀
+            .ignoreTablePrefix(ignorePrefix)
+            //忽略表后缀
+            .ignoreTableSuffix(ignoreSuffix).build();
+        //配置
+        Configuration config = Configuration.builder()
+            //版本
+            .version("1.0.0")
+            //描述
+            .description("数据库设计文档生成")
+            //数据源
+            .dataSource(dataSource)
+            //生成配置
+            .engineConfig(engineConfig)
+            //生成配置
+            .produceConfig(processConfig).build();
+        //执行生成
+        new DocumentationExecute(config).execute();
     }
 
 }

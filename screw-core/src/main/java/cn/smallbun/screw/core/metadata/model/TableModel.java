@@ -49,4 +49,14 @@ public class TableModel implements Serializable {
      * 是否弃用
      */
     private Boolean           deprecated;
+
+    /**
+     * 索引名称
+     */
+    private String            indexNames;
+
+    /**
+     * 索引列
+     */
+    private String            indexColumnNames;
 }
