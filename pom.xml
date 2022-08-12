@@ -299,11 +299,11 @@
     <distributionManagement>
         <repository>
             <id>nexus</id>
-            <url>https://git.silvrr.com:8983/repository/maven-releases/</url>
+            <url>https://xxx:8983/repository/maven-releases/</url>
         </repository>
         <snapshotRepository>
             <id>nexus</id>
-            <url>https://git.silvrr.com:8983/repository/maven-snapshots/</url>
+            <url>https://xxx:8983/repository/maven-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
     <!--自定义mvn伺服设置 开始 -->
